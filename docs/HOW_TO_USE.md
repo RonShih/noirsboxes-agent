@@ -95,6 +95,37 @@ npx -y @playwright/mcp@latest --help    # 預先抓 mcp 套件
 npx playwright install chromium          # 預先抓 Chromium
 ```
 
+### 4b. 若 `.claude/settings.json` 的 MCP 設定不生效（備援）
+
+有些環境 / Claude Code 版本**不會自動 spawn** 專案層 settings.json 裡的 MCP server（特別是用 CLI 而非 Desktop app 時）。若打開 Claude Code 之後 `/first-time-login` 找不到 `mcp__playwright__*` 工具，改用 CLI **手動註冊**：
+
+```bash
+cd /Users/ron/Desktop/SocialMediaAgent/noirsboxes-agent
+
+claude mcp add playwright \
+  -s project \
+  -- npx -y @playwright/mcp@latest \
+  --user-data-dir /Users/ron/Desktop/SocialMediaAgent/noirsboxes-agent/browser_profiles
+```
+
+選項說明：
+- `-s project` — 註冊在專案層（**別人 clone 也吃這份**，存在 `.mcp.json`）
+- `-s user` — 只註冊在你這台電腦
+- `-s local`（預設）— 只這個目錄、不同步
+
+**絕對路徑不能省略**`--user-data-dir`，否則 scheduled task 的 Chromium profile 會錯亂（踩過的坑）。
+
+註冊完確認：
+```bash
+claude mcp list
+# 應看到 playwright: npx -y @playwright/mcp@latest ... - ✓ Connected
+```
+
+若要移除重裝：
+```bash
+claude mcp remove playwright -s project
+```
+
 ### 5. 首次登入 5 平台
 在 Claude Code 裡打：
 ```
@@ -276,6 +307,7 @@ Claude Code UI → Scheduled Tasks → 找到 publish-due → disable。
 | `command not found: npx` | 沒裝 Node.js | `brew install node` 或下載 nodejs.org |
 | Playwright 啟動失敗 "browser not found" | Chromium 沒下載完整 | 跑 `npx playwright install chromium` |
 | `npx @playwright/mcp` 下載失敗 | 網路 / 防火牆 | 換網、或檢查 npm registry 設定 |
+| `/first-time-login` 找不到 `mcp__playwright__*` 工具 | `.claude/settings.json` 的 MCP 區塊沒被 Claude Code 自動 spawn | 用 `claude mcp add` 手動註冊（見 Step 4b）|
 | routine 一直跳權限提示 | `~/.claude/settings.json` 沒 reload | Cmd+Q 重啟 Claude Code |
 | 發文後貼文不見（FB/IG） | 平台靜默 block 自動化 | 間歇性、下次可能過 |
 | routine 跑完所有列 status 都 scheduled | 窗口條件對不上 | 看 `config/schedule.yaml` 的 `publish_window_minutes` 與 cron tick 時機 |
