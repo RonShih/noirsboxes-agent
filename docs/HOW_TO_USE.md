@@ -19,6 +19,16 @@
 
 ## 初次設定（10 分鐘）
 
+### 0. 先確認環境
+
+```bash
+node --version   # >= 18（npx 會用到）
+npm --version    # 可以跑就好
+claude --version # Claude Code 已安裝
+```
+
+沒裝 Node：`brew install node`（macOS）或去 https://nodejs.org。
+
 ### 1. 安裝 Claude Code
 從 https://claude.com/claude-code 下載 Desktop 版、登入。
 
@@ -49,25 +59,53 @@
 
 **Cmd+Q 重啟 Claude Code**（settings 只在啟動時載入）。
 
-### 3. Clone 專案 + 初始化
+### 3. Clone 專案
 ```bash
 cd ~/Desktop
-# 從 git 或 zip 拿到 noirsboxes-agent/
+git clone https://github.com/RonShih/noirsboxes-agent
 cd noirsboxes-agent
 ls config/       # 應該看到 brand / products / schedule.yaml
 ```
 
-### 4. 首次登入 5 平台
+**不用跑 `npm install`** — 專案沒有 `package.json`，所有 Playwright 相關套件靠 `npx` 按需下載。
+
+### 4. 首次啟動：讓 Playwright 自己裝好
+
+第一次在 Claude Code 裡呼叫任何 Playwright 指令（例如 `/first-time-login`）時，會發生：
+
+```
+Claude Code 讀 .claude/settings.json
+  ↓
+啟動 npx -y @playwright/mcp@latest
+  ↓
+npm 從 registry 下載 @playwright/mcp          ← 約 30 秒、存到 ~/.npm/_npx/
+  ↓
+Playwright 檢查要不要下載 Chromium 執行檔
+  ↓
+若沒有 → 自動下載 Chromium（~150 MB）         ← 1-3 分鐘、存到 ~/Library/Caches/ms-playwright/
+  ↓
+開瀏覽器
+```
+
+**全程自動**，你不用手動 npm install 或下載 Chromium。
+
+若卡在下載或出錯，可以手動加速一次：
+```bash
+npx -y @playwright/mcp@latest --help    # 預先抓 mcp 套件
+npx playwright install chromium          # 預先抓 Chromium
+```
+
+### 5. 首次登入 5 平台
 在 Claude Code 裡打：
 ```
 /first-time-login
 ```
 
-Playwright 會開 Chromium → 依序引導你登入 FB / IG / X / YT / TikTok。登完 cookies 寫進 `browser_profiles/shared/`，之後 routine 靠這個登入狀態。
+Playwright 會開 Chromium（首次可能等 1-3 分鐘下載）→ 依序引導你登入 FB / IG / X / YT / TikTok。登完 cookies 寫進 `browser_profiles/shared/`，之後 routine 靠這個登入狀態。
 
 **登完請關掉 Chromium 視窗**（避免 profile lock）。
 
-### 5. 準備素材
+### 6. 準備素材
 把圖片、影片放到 `media/assets/`：
 ```
 media/assets/
@@ -234,8 +272,12 @@ Claude Code UI → Scheduled Tasks → 找到 publish-due → disable。
 
 | 症狀 | 可能原因 | 解法 |
 |---|---|---|
+| 首次跑很久才開 Chromium | 正在下載 Playwright + Chromium | 正常，等 1-3 分鐘 |
+| `command not found: npx` | 沒裝 Node.js | `brew install node` 或下載 nodejs.org |
+| Playwright 啟動失敗 "browser not found" | Chromium 沒下載完整 | 跑 `npx playwright install chromium` |
+| `npx @playwright/mcp` 下載失敗 | 網路 / 防火牆 | 換網、或檢查 npm registry 設定 |
 | routine 一直跳權限提示 | `~/.claude/settings.json` 沒 reload | Cmd+Q 重啟 Claude Code |
-| 發文後貼文不見（FB/IG） | 平台靜默 block 自動化 | 看 `feedback_fb_silent_drop` memory；間歇性、下次可能過 |
+| 發文後貼文不見（FB/IG） | 平台靜默 block 自動化 | 間歇性、下次可能過 |
 | routine 跑完所有列 status 都 scheduled | 窗口條件對不上 | 看 `config/schedule.yaml` 的 `publish_window_minutes` 與 cron tick 時機 |
 | 跑 `/publish-now` 說 `image not found` | 素材不在 `media/assets/` | 檢查 `data/calendar.json` 的 `image_path` 有無對應實體檔 |
 | Playwright 開新 Chromium 卡住 | profile lock（你開著舊視窗）| 關掉手動開的 Chromium 視窗再跑 |
