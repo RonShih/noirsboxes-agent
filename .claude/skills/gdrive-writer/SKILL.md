@@ -37,16 +37,22 @@ description: 寫本地內容日曆 (data/calendar.json) 與本地週報 (reports
   ```
 
 **實作**：
-1. `cat` 讀現有 `data/calendar.json`
-2. 用 `jq` 或重寫 JSON：計算下個 row_id、append 新列到 `rows[]`
-3. 原子寫入：先寫到 `data/calendar.json.tmp` → `mv` 覆蓋
-  ```bash
-  jq --argjson new "$NEW_ROWS_JSON" \
-    '.rows += ($new | [.[] | . + {row_id: (input_line_number)}])' \
-    data/calendar.json > data/calendar.json.tmp && \
-    mv data/calendar.json.tmp data/calendar.json
-  ```
-  （實務上用 Python 或 node 小 script 比較好算 row_id；也可以直接讓 Claude 用 Edit tool 修）
+1. **若 `data/calendar.json` 不存在 → 先 bootstrap**（第一次用這個專案常見情境）：
+   ```json
+   {
+     "_schema": {
+       "version": 1,
+       "fields": ["row_id","date","time","platform","topic","caption","hashtags","image_path","video_path","status","notes","post_url","published_at"],
+       "status_enum": ["scheduled","published","failed","cancelled"],
+       "platform_enum": ["facebook","instagram","x","youtube","tiktok"]
+     },
+     "rows": []
+   }
+   ```
+   先 `mkdir -p data/` 再寫這個骨架。
+2. `cat` 讀現有 `data/calendar.json`
+3. 用 `jq` 或 Edit tool：計算下個 row_id（= max(rows[].row_id) + 1）、append 新列到 `rows[]`
+4. 原子寫入：先寫到 `data/calendar.json.tmp` → `mv` 覆蓋
 
 **Output**: `{ "appended": N }`
 

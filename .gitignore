@@ -4,6 +4,7 @@ media/_tmp/
 media/temp/
 media/assets/
 logs/
+data/calendar.json
 data/stats-history.json
 .DS_Store
 config/secrets.yaml
