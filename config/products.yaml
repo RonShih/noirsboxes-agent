@@ -1,0 +1,43 @@
+# NoirsBoxes 產品清單 — content-writer skill 會抽樣產生貼文
+# 新增/修改產品只需編輯本檔
+products:
+  - id: pd-tester
+    name: PD 快充測試儀
+    category: 快充協議檢測
+    selling_points:
+      - 支援 PD 3.1 / PPS / QC4+ 全協議解析
+      - 即時顯示 V/A/W 與握手過程
+      - USB-C 安全檢測
+    target_audience: [充電器原廠 QA, 認證實驗室, 維修技師]
+
+  - id: cable-tester
+    name: 數據線測試儀
+    category: 線材品質檢測
+    selling_points:
+      - 內阻 / E-Marker / 屏蔽完整性一鍵測
+      - 真假線辨識
+    target_audience: [線材廠 QA, 通路品管]
+
+  - id: wireless-tester
+    name: 無線充電測試儀
+    category: 無線充電
+    selling_points:
+      - Qi/Qi2 協議模擬
+      - 異物偵測（FOD）測試
+      - 充電效率曲線
+    target_audience: [手機/耳機品牌, 配件廠]
+
+  - id: audio-tester
+    name: 音頻測試儀
+    category: 音頻
+    selling_points:
+      - THD+N / SNR / 頻響量測
+      - Type-C 音頻轉接器驗證
+    target_audience: [配件廠, 設計驗證]
+
+content_themes:
+  - 產品介紹
+  - 技術知識（快充協議、PD 規範解說）
+  - 客戶案例
+  - 行業新聞
+  - 真假鑑別小知識

@@ -1,0 +1,9 @@
+browser_profiles/
+.playwright-mcp/
+media/_tmp/
+media/temp/
+media/assets/
+logs/
+data/stats-history.json
+.DS_Store
+config/secrets.yaml

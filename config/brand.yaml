@@ -1,0 +1,57 @@
+company:
+  name_zh: 實行微電子有限公司
+  name_en: NoirsBoxes
+  website: https://www.noirsboxes.com/
+  sales_email: sales@mdv.com.tw
+  backup_email: noirsboxes@mdv.com.tw
+  address: 302082 台灣新竹縣竹北市台元二街 12 號 6 樓之 5
+
+voice:
+  tone: 專業而親切，B2B 技術買家與終端消費者並重
+  emphasis: [技術精準度, 品質, 實測結果]
+  forbidden_words: [最好, 唯一, 世界第一, 第一名]
+  forbidden_behavior: [競品攻擊, 未驗證數據]
+
+# ⚠️ 測試階段使用「個人帳號」，品牌版存在下方註解備份
+# 切回品牌版時把下方註解取消、同時註解掉當前的個人帳號 block
+socials:
+  facebook:
+    handle: yichao.shih
+    url: https://www.facebook.com/yichao.shih
+  instagram:
+    handle: ronshih_
+    url: https://www.instagram.com/ronshih_/
+  tiktok:
+    handle: "@ronshih_"                          # 實際帳號未確認；TikTok 上傳走 Studio 不依賴此 URL
+    url: https://www.tiktok.com/@ronshih_/
+  youtube:
+    handle: "Ron拾"                               # channel id = UC2siYoJPdTxZtq81b0aEBeg；上傳走 Studio
+    url: https://www.youtube.com/channel/UC2siYoJPdTxZtq81b0aEBeg
+  x:
+    handle: "@ronshih_"
+    url: https://x.com/ronshih_
+
+# 品牌版（production 切回用）：
+# socials:
+#   facebook:   { handle: BlackMagicNoirsBoxes,   url: https://www.facebook.com/BlackMagicNoirsBoxes/ }
+#   instagram:  { handle: black_magic_noirsboxes, url: https://www.instagram.com/black_magic_noirsboxes/ }
+#   tiktok:     { handle: "@noirs.boxes",          url: https://www.tiktok.com/@noirs.boxes/ }
+#   youtube:    { handle: "@boxesnoirs",           url: https://www.youtube.com/@boxesnoirs }
+#   x:          { handle: "@NoirsBoxes",            url: https://x.com/NoirsBoxes }
+
+# ========================================
+# 本地儲存（取代舊的 gdrive 區塊）
+# ========================================
+# 所有內容日曆、素材、週報都存本地，不再依賴 Google Drive / Sheet / Doc
+storage:
+  calendar_file: data/calendar.json        # 內容日曆（取代舊的 content-calendar-2026 Sheet）
+  assets_dir: media/assets                  # 圖 / 影片素材
+  reports_dir: reports                      # 週報 markdown
+  stats_history_file: data/stats-history.json  # 每週收集的 stats（給趨勢分析用）
+
+# 舊的 gdrive 區塊已廢棄、保留只為參考（下次交付可整區刪）：
+# gdrive:
+#   root_folder_id: "1mdG7dYWVUmlihzW7BWqZ8sH8Q3fD0lcY"
+#   calendar_sheet_id: "1oXWU43yo6_jpjxD0NYJsmxi4NHjQN4KaPiVIqlA63BY"
+#   reports_folder_id: "1N1yE4Svg-uhu96hFsPXGJwfqEuSkqy2g"
+#   media_folder_id: "1_Z6KTd0aJ9_a7vmxojtdd1KDqFvgMCmR"
