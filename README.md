@@ -98,6 +98,26 @@ noirsboxes-agent/
 
 ---
 
+## 觸發方式
+
+兩種，可並用：
+
+### A. Telegram（用 Claude Channels — 推薦給對話式互動）
+
+用 [Claude Channels](https://code.claude.com/docs/en/channels)（Anthropic 官方）把 Telegram 接進你**已開的 Claude Code session**，可以在 TG 群組對 Claude 對話下指令、看訊息、追問為什麼失敗。
+
+**特色**：
+- 同個 chat 累積 context，可以追問「FB 為什麼失敗」「再試一次」等 follow-up
+- 必須 Claude Code v2.1.80+ + claude.ai 登入（非 API key）
+- 必須一直開著 Claude session（電腦關了 bot 就停）
+
+**設定**：見 [`docs/HOW_TO_USE.md`](./docs/HOW_TO_USE.md) 的「Telegram Channel 設定」章節。
+
+### B. Scheduled task（cron 自動化）
+完全無人值守，到點自動跑。適合「凌晨 3 點產下週日曆」這種無人時段。
+
+---
+
 ## Routine 自動化部署（交付給廠商時）
 
 Routine 在 fresh session 跑，需要：

@@ -8,12 +8,13 @@
 
 一套自動化社群小編，用 Playwright 開真瀏覽器替你發文到 5 平台（FB / IG / X / YouTube / TikTok），內容日曆和素材全部存本地、不碰 Google Drive。
 
-## 兩種使用模式
+## 三種使用模式
 
 | 模式 | 時機 | 誰觸發 |
 |---|---|---|
 | **手動模式** | 第一次設定、測試、突發狀況 | 你在 Claude Code 對話裡打 slash command |
-| **自動模式** | 日常營運、無人值守 | Claude Code scheduled task 按 cron 自動跑 |
+| **Telegram 模式（Claude Channels）** | 出門用手機操作、想對話式 debug | 你在 TG 群組打指令給 bot，bot 把訊息推進你的 Claude session |
+| **自動模式（routine）** | 日常營運、無人值守 | Claude Code scheduled task 按 cron 自動跑 |
 
 ---
 
@@ -232,6 +233,117 @@ media/assets/
 **回報：**
 逐列回報 published / failed + 原因。
 ```
+
+---
+
+## Telegram Channel 設定（模式 B）
+
+用 [Claude Channels](https://code.claude.com/docs/en/channels)（Anthropic 官方）把 Telegram 接進你**已開的 Claude Code session**，可以在 TG 群組對 Claude 對話下指令。
+
+### 為什麼用 Channels 而不是自製 bot
+
+| | Claude Channels（這份用法） | 自製 spawn bot |
+|---|---|---|
+| 開新 chat | 重啟 Claude session | 每次自動 |
+| 對話式 debug（同 chat 追問）| ✅ Claude 記得前文 | ❌ 每次無記憶 |
+| Claude Code 要不要先開 | **必須**（且 `--channels` 啟動）| 不用 |
+| 官方支援 | ✅ Anthropic 維護 | ❌ 自己維護 |
+
+我們選 **Channels**：對話式 debug 比批次發文更需要 context 累積。
+
+### 前置條件
+
+- Claude Code v2.1.80+（`claude --version` 確認）
+- 用 **claude.ai 帳號**登入（不支援 console / API key）
+- 安裝 [Bun](https://bun.sh)：`brew install oven-sh/bun/bun`（plugin 是 Bun 寫的）
+- Team / Enterprise 帳號要 admin 在 settings 開 `channelsEnabled: true`（個人帳號不用）
+
+### 設定步驟
+
+#### 1. 申請 Telegram bot token
+
+1. Telegram 找 **@BotFather**、`/newbot`
+2. 取顯示名稱、英文 username（要以 `bot` 結尾）
+3. 拿到 token（`7891234567:AAExxx...` 格式）
+
+#### 2. 安裝官方 telegram plugin
+
+進 Claude Code 對話打：
+
+```
+/plugin marketplace add anthropics/claude-plugins-official
+/plugin install telegram@claude-plugins-official
+/reload-plugins
+```
+
+> 若 marketplace 找不到 → `/plugin marketplace update claude-plugins-official` 再試。
+
+#### 3. 配置 token
+
+```
+/telegram:configure 7891234567:AAExxx...
+```
+
+token 會存到 `~/.claude/channels/telegram/.env`（自動 gitignore，不在你專案 repo）。
+
+#### 4. 退出後加 `--channels` 重啟
+
+關掉現在的 Claude Code session，在 noirsboxes-agent 目錄重開：
+
+```bash
+cd /Users/ron/Desktop/SocialMediaAgent/noirsboxes-agent
+claude --channels plugin:telegram@claude-plugins-official
+```
+
+這個 session 會接住 bot 的訊息。
+
+#### 5. 配對你的 TG 帳號（首次）
+
+- 打開 TG，找你剛建的 bot，傳任何訊息（例：`hi`）
+- bot 回一組配對碼（`pairing code: ABCD1234`）
+- 切回 Claude Code 終端機打：
+
+```
+/telegram:access pair ABCD1234
+```
+
+- 鎖定只允許你發訊息：
+
+```
+/telegram:access policy allowlist
+```
+
+### 日常使用
+
+Claude Code 開著（with `--channels`）的時候：
+
+```
+你（TG）→ /publish-now
+Claude → [操作 Playwright 發 5 平台]
+Claude → 發完了：FB ✅、IG ✅、X ✅、YT ❌（channel verification needed）
+你（TG）→ YT 為什麼失敗？
+Claude → 因為 Ron拾 channel 還沒驗證，需要去 youtube.com/account 完成驗證
+你（TG）→ 那其他四個的 post URL?
+Claude → FB: ... IG: ... X: ... TikTok: ...
+你（TG）→ 把 YT 那行改成 status=cancelled
+Claude → [編輯 data/calendar.json] 改完了
+```
+
+整段在同個 TG 群組、同個 Claude session、累積 context。
+
+### 開新 chat（清乾淨 context）
+
+當對話太長想重置：
+
+- **方法 A**：終端機 Ctrl+C 結束 → `claude --channels plugin:telegram@claude-plugins-official` 重起
+- **方法 B**：在 Claude session 內打 `/clear`（保留 session、清對話歷史）
+
+### 注意
+
+- **Claude Code 關了 bot 就停**（沒人接訊息）— 不適合無人值守、用 routine 補
+- token 等於 bot 密碼，洩漏出去任何人都能控制
+- 一個 bot 只能綁一個 Claude session（多個 session 會搶 polling）
+- 想完全無人值守的場景 → 用模式 C（cron routine）
 
 ---
 
