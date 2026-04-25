@@ -148,7 +148,7 @@ TG 上傳的素材會自動下載到 `~/.claude/channels/telegram/inbox/`，Clau
 - `browser_profiles/` 不進 git → 新機器要重跑 `/first-time-login`
 
 ### `config/secrets.yaml` 目前空的
-本地化後基本沒作用（保留為未來 OpenAI API key 等用途的 placeholder）。
+目前無實際作用、保留為未來 OpenAI API key 等用途的 placeholder。
 
 ---
 

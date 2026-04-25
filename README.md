@@ -64,7 +64,7 @@ noirsboxes-agent/
 ├── config/
 │   ├── brand.yaml              # 品牌資產 + 本地儲存路徑
 │   ├── products.yaml           # 產品清單
-│   └── secrets.yaml            # 🔒 gitignored；本地化後基本無用
+│   └── secrets.yaml            # 🔒 gitignored；預留 placeholder
 │
 ├── media/
 │   └── assets/                 # 🟡 gitignored；圖 / 影素材（另用 rsync 傳）

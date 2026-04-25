@@ -1,12 +1,14 @@
 ---
 name: publish-tiktok
-description: 用 Playwright MCP 在 TikTok Studio 上傳短影音（驗收 #6/#7 不要求，先預留骨架供未來擴充）
+description: 用 Playwright 在 TikTok Studio 上傳短影音。
 ---
 
+> 共通規則見 `.claude/AGENT_RULES.md`，本檔只描述 TikTok 特有的步驟。
+
 ## Input
-- `local_video_path`
-- `caption`
-- `hashtags`
+- `local_video_path`：本地影片絕對路徑
+- `caption`：說明文字
+- `hashtags`：list of string
 
 ## Output
 ```json
@@ -14,20 +16,15 @@ description: 用 Playwright MCP 在 TikTok Studio 上傳短影音（驗收 #6/#7
 ```
 
 ## 流程
-1. 確認 `local_video_path` 實體存在（`test -f`），不存在回 `{ "error": "video not found", "path": "..." }`
-2. `browser_navigate` → `https://www.tiktok.com/tiktokstudio/upload`
-3. `browser_file_upload` 直接傳 `local_video_path`（本地檔，無需下載）
-4. 等預覽
-5. caption 框輸入 `caption + " " + hashtags.join(" ")`
-6. 點「Post」
+1. `browser_navigate` → `https://www.tiktok.com/tiktokstudio/upload`
+2. `browser_file_upload` 傳 `local_video_path`
+3. 等預覽載入
+4. caption 框輸入 `caption + " " + hashtags.join(" ")`
+5. 點「Post」
+6. 等跳到 `/tiktokstudio/content`、抓影片 URL
 
-## 不要做
-- **不要下載任何 Drive URL** — 輸入已是本地絕對路徑
-- **不要刪除 `local_video_path`** — 素材共享
-- **不要 `browser_take_screenshot` 存檔到 logs/** — 不產生任何 .png
-- （`browser_snapshot` 是讀頁面結構、不是截圖，**該用就用**）
-- **不要因為「過去某列失敗 / TikTok 對自動化敏感」就跳過不發**。你被 call 就是代表 /publish-now 已經判斷這列要發。**照步驟跑到底**，只有在實際遇到錯誤時才回 `error`。不要「預測」失敗。
-
-## 狀態
-- **未列入驗收**，僅保留入口供未來擴充
-- 第一版若使用者沒下指令呼叫，不需執行
+## TikTok 特有的坑
+- 「開啟自動內容檢查？」dialog → **點「開啟」**（取消會被降級為「僅自己」）
+- 「已新增編輯功能」alert → 點「知道了」
+- 發佈前驗證可見度欄位是「所有人」（被降級就手動切回）
+- 對自動化敏感，要求額外驗證時回 `{ "error": "TikTok blocked / verification required" }`
