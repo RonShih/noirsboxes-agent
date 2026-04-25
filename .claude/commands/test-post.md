@@ -1,5 +1,5 @@
 ---
-description: 一次性 demo — 在 FB / X / IG / YouTube / TikTok 個人帳號各發一則測試貼文，驗證 Playwright MCP 流程打通。不寫 calendar、純手動測試。
+description: 一次性 demo — 在 FB / X / IG / YouTube / TikTok 個人帳號各發一則測試貼文，驗證 Playwright MCP 流程打通。
 ---
 
 ## 目標
@@ -97,5 +97,5 @@ ls media/assets/*.mp4 | head -1
 - 不要重試超過 1 次
 - 不要動到 NoirsBoxes 官方帳號 / 粉專
 - **不要碰 Google Drive** — 素材必須已在 `media/assets/`
-- **不要寫 `data/calendar.json`**（test-post 是純驗證，不影響正式 calendar）
+- 純驗證流程，不影響任何持久狀態
 - 不要 `browser_take_screenshot` 存檔到 logs/（`browser_snapshot` 讀頁面結構可用）

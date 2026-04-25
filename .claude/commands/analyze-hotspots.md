@@ -26,5 +26,5 @@ argument-hint: "[top_n 預設 10]"
 
 ## 不要做
 - 不要把相關性過濾塞進 `fetch-trends-*` skill — 過濾邏輯集中在這裡
-- 不要產 caption — caption 是 `content-writer` / `generate-calendar` 的事
+- 不要產 caption — caption 是 `content-writer` 的事
 - 不要快取；每次跑都抓即時資料
