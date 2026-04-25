@@ -3,7 +3,7 @@ name: publish-facebook
 description: 用 Playwright 在 Facebook 個人 timeline / 粉專發一篇含圖貼文。
 ---
 
-> 共通規則見 `.claude/AGENT_RULES.md`，本檔只描述 FB 特有的步驟。
+> 共通規則見 `CLAUDE.md`「共通行為規則」章節，本檔只描述 FB 特有的步驟。
 
 ## Input
 - `caption`：貼文文字

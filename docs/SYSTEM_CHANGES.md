@@ -208,7 +208,7 @@ TG 上傳的素材會自動下載到 `~/.claude/channels/telegram/inbox/`，Clau
 | `publish-youtube` | title / description / tags / local_video_path | `{video_url}` |
 | `publish-tiktok` | caption / hashtags / local_video_path | `{video_url}` |
 
-共通鐵則見 `.claude/AGENT_RULES.md`。
+共通鐵則見 `CLAUDE.md` 的「共通行為規則」章節。
 
 ### 內容產製類
 | Skill | 用途 |

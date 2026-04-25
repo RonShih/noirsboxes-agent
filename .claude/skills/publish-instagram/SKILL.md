@@ -3,7 +3,7 @@ name: publish-instagram
 description: 用 Playwright 在 Instagram 發一篇 Feed 含圖貼文（非 Story）。
 ---
 
-> 共通規則見 `.claude/AGENT_RULES.md`，本檔只描述 IG 特有的步驟。
+> 共通規則見 `CLAUDE.md`「共通行為規則」章節，本檔只描述 IG 特有的步驟。
 
 ## Input
 - `caption`：貼文文字

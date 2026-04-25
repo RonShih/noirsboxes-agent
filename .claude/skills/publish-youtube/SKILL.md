@@ -3,7 +3,7 @@ name: publish-youtube
 description: 用 Playwright 在 YouTube Studio 上傳影片並填 metadata。
 ---
 
-> 共通規則見 `.claude/AGENT_RULES.md`，本檔只描述 YT 特有的步驟。
+> 共通規則見 `CLAUDE.md`「共通行為規則」章節，本檔只描述 YT 特有的步驟。
 
 ## Input
 - `local_video_path`：本地影片絕對路徑

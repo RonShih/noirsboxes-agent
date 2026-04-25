@@ -57,7 +57,6 @@ noirsboxes-agent/
 │
 ├── .claude/
 │   ├── settings.json           # MCP 設定 + permissions.allow
-│   ├── AGENT_RULES.md          # 全域行為規則（任何任務先讀這個）
 │   ├── commands/               # 5 個 slash command
 │   └── skills/                  # 21 個 skill（SKILL.md）
 │
