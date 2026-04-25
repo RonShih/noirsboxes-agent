@@ -116,46 +116,20 @@
 
 ---
 
-## 3. Scheduled Tasks（Routine）
+## 3. Telegram Channel（Anthropic 官方 plugin）
 
-### 存放位置
+### 安裝位置
 ```
-~/.claude/scheduled-tasks/<taskId>/SKILL.md       ← Prompt（人類可編輯）
-~/Library/Application Support/Claude/...          ← Cron 表達式、狀態（Claude Desktop 管，別手動改）
+~/.claude/channels/telegram/.env       ← bot token（自動 gitignore）
+~/.claude/channels/telegram/inbox/     ← 收到的圖 / 影片自動下載到這
 ```
 
-**關鍵**：scheduled tasks **不在專案 repo 裡**，要手動重建。
+### 啟動指令
+```bash
+claude --channels plugin:telegram@claude-plugins-official
+```
 
-### 目前有的 tasks
-
-| taskId | Cron / 觸發 | 用途 |
-|---|---|---|
-| `test-5min` | `*/5 * * * *` | **測試用** — 每 5 分跑 /publish-now（production 時該刪）|
-| `calendar-test` | manual only | 手動觸發 /generate-calendar（產下週內容到 Sheet）|
-
-### Production 時該有什麼（目前還沒建）
-
-| taskId | Cron | 用途 |
-|---|---|---|
-| `publish-due` | `0 * * * *`（每小時）| routine 自動發文 |
-| `generate-weekly-calendar` | `0 3 * * 0`（每週日 03:00）| 週日凌晨產下週日曆 |
-
-### 重建 task 的步驟
-
-1. Claude Code UI 點「Scheduled Tasks」→「Create」
-2. 填 taskId、cron
-3. Prompt 從 `routines/<taskId>.md`（**建議之後把 prompt 模板存進 repo**）複製貼上
-4. 按一次「Run now」預先批准所有 MCP 工具（會彈權限提示、全按允許、會存到 task）
-
-### Task prompt 要遵守的鐵則（已寫在現有 task prompt 裡）
-
-- 工作目錄必須是 `/Users/ron/Desktop/SocialMediaAgent/noirsboxes-agent`
-- 不要在 worktree isolation 模式跑（Playwright profile 會是空的）
-- 不要執行 `/first-time-login`（要人類互動）
-- 不要因為過去失敗列的 notes 預測失敗就跳過
-- 不寫 `logs/*.md`、不截圖、不 snapshot
-- 發完 `browser_close`
-- 沒 due 列就立刻 return
+詳細設定步驟見 `docs/HOW_TO_USE.md` 的「Telegram Channel 設定」。
 
 ---
 
@@ -186,46 +160,22 @@
 ```
 <專案根>/
 ├── data/
-│   ├── calendar.json         ← 內容日曆（取代 content-calendar-2026 Sheet）
-│   └── stats-history.json    ← 每週 stats 歷史（/weekly-report 產出）
+│   └── stats-history.json    ← 每週 stats 歷史（/weekly-report 產出時建）
 ├── media/
 │   └── assets/               ← 圖片、影片素材
 └── reports/
     └── <YYYY-WWW>.md         ← 週報 markdown
 ```
 
-### `data/calendar.json` schema
-```json
-{
-  "_schema": { "fields": [...], "status_enum": [...], "platform_enum": [...] },
-  "rows": [
-    {
-      "row_id": 1,
-      "date": "2026-04-21",
-      "time": "10:00",
-      "platform": "facebook",
-      "topic": "產品介紹",
-      "caption": "...",
-      "hashtags": ["#..."],
-      "image_path": "media/assets/md905.jpg",
-      "video_path": null,
-      "status": "scheduled",
-      "notes": "...",
-      "post_url": null,
-      "published_at": null
-    }
-  ]
-}
-```
+TG 上傳的素材會自動下載到 `~/.claude/channels/telegram/inbox/`，Claude 直接拿來發文。
 
 ### 換機器時
-- Git push `data/`、`config/`、`.claude/`、`docs/` → 新機器 pull
-- `media/assets/` **不進 git**（檔案可能很大）→ 分開用 rsync / zip / 雲端硬碟傳
+- Git push `config/`、`.claude/`、`docs/` → 新機器 pull
+- `media/assets/` **不進 git**（檔案大）→ rsync / zip 傳
 - `browser_profiles/` 不進 git → 新機器要重跑 `/first-time-login`
-- **不需要建 Apps Script、不需要 OAuth Drive**
 
 ### `config/secrets.yaml` 目前空的
-本地化後這個檔基本沒作用（保留為未來 OpenAI API key 等用途的 placeholder）。
+本地化後基本沒作用（保留為未來 OpenAI API key 等用途的 placeholder）。
 
 ---
 
@@ -233,13 +183,11 @@
 
 | 坑 | 現象 | 解法 |
 |---|---|---|
-| Scheduled task 在 worktree 裡跑 | 每次都是新 Chromium profile、cookies 不持久 → 全部平台卡登入 | Task 設定不要用 worktree isolation |
-| FB 靜默封鎖自動發文 | 整個 UI 流程 OK、dialog 關了、但貼文不見 | FB 自動化偵測封鎖，非 bug |
-| Routine 每次都問權限 | Claude session CWD 非專案、讀不到專案 settings | 把 permissions 放**使用者層** settings |
-| Run now 批准只存該 task | 新 task 又要重批准 | 用使用者層 bypass 規則避免 |
-| 改完 settings 沒生效 | Claude Code 啟動時只讀一次 | **Cmd+Q 重開 Claude Code** |
-| 本地 calendar.json 並發寫入 | 兩個 session 同秒改檔 → 覆蓋 | gdrive-writer 用 `.tmp` + `mv` 原子寫入 |
-| 素材不在 `media/assets/` | publish-* 回 `{ error: image not found }` | 先放素材、再排 calendar |
+| FB 靜默封鎖自動發文 | UI 流程 OK、dialog 關了、貼文不見 | 平台 anti-automation；間歇性、下次可能過 |
+| 一直跳權限提示 | session 沒讀到 bypass 設定 | `~/.claude/settings.json` 加 `defaultMode: bypassPermissions`、Cmd+Q 重啟 |
+| Channel session 看不到 Playwright | Playwright 只裝在專案 `.claude/settings.json` | `claude mcp add playwright -s user -- ...`（user-level）|
+| 改完 settings 沒生效 | Claude Code 啟動時只讀一次 | Cmd+Q 重開 Claude Code |
+| Playwright 開新 Chromium 卡住 | profile lock — 你開著手動登入的視窗 | 關掉手動 Chromium 視窗 |
 
 ---
 
@@ -247,31 +195,22 @@
 
 ```
 [ ] clone repo
+[ ] brew install oven-sh/bun/bun
+[ ] claude mcp add playwright -s user -- npx -y @playwright/mcp@latest --user-data-dir <絕對路徑>/browser_profiles
 [ ] 建 ~/.claude/settings.json（複製本文件 §1 內容）
 [ ] 重啟 Claude Code
-[ ] 確認 data/calendar.json 存在（若無先跑 /generate-calendar）
 [ ] 把 media/assets/ 底下素材傳到新機器（rsync / zip）
-[ ] 執行 /first-time-login 登入 5 平台
+[ ] /plugin install telegram@claude-plugins-official、配對 TG bot
+[ ] /first-time-login 登入 5 平台
 [ ] 關掉 Playwright Chromium 視窗
-[ ] 手動建 scheduled tasks（publish-due / generate-weekly-calendar）
-[ ] 對每個 task 按一次 Run now 預先批准權限
-[ ] 等下一個 cron tick 驗證自動發文
+[ ] claude --channels plugin:telegram@claude-plugins-official 啟動 bot session
 ```
 
-**不再需要**：npm install、Apps Script、Drive MCP OAuth
-
 ---
 
-## 8. 非系統層但容易忘的設定
+## 8. 專案內 commands（slash commands）
 
-- `config/schedule.yaml` 的 `cron.publish_window_minutes` 和 `early_window_minutes`（目前 `[slot, slot+10 min]`）
-- 跟 task cron 頻率要搭配 — 5 分 cron 配 10 分窗口、1 小時 cron 配 10 分窗口（只有整點 slot 才會被命中）
-
----
-
-## 9. 專案內 commands（slash commands）
-
-路徑 `.claude/commands/*.md` — 手動在對話打 `/xxx` 或 scheduled task 呼叫。
+路徑 `.claude/commands/*.md` — 手動在 Claude Code 對話或 TG bot 對話打 `/xxx`。
 
 | Command | 用途 | 觸發方式 |
 |---|---|---|
@@ -290,104 +229,84 @@
 路徑 `.claude/skills/<name>/SKILL.md` — command 呼叫或 Claude 自己 call。不會被人類直接 slash-invoke。
 
 ### 發文類（5 個，對應 5 平台）
-| Skill | 輸入 | 輸出 | 被誰 call |
-|---|---|---|---|
-| `publish-facebook` | caption / hashtags / image_url | `{post_url}` | `/publish-now` |
-| `publish-instagram` | 同上 | 同上 | 同上 |
-| `publish-x` | caption / image_url（選填）| 同上 | 同上 |
-| `publish-youtube` | title / description / tags / local_video_path | `{video_url}` | 同上 |
-| `publish-tiktok` | caption / hashtags / local_video_path | `{video_url}` | 同上 |
+| Skill | 輸入 | 輸出 |
+|---|---|---|
+| `publish-facebook` | caption / hashtags / local_image_path | `{post_url}` |
+| `publish-instagram` | 同上 | 同上 |
+| `publish-x` | caption / local_image_path（選填）| 同上 |
+| `publish-youtube` | title / description / tags / local_video_path | `{video_url}` |
+| `publish-tiktok` | caption / hashtags / local_video_path | `{video_url}` |
 
-**共通鐵則**（已寫在各 SKILL.md）：
-- 不 screenshot / snapshot 存檔
-- 不因「歷史失敗」就跳過、不換順序
-- 失敗回 `{error}`，不重試
+共通鐵則見 `.claude/AGENT_RULES.md`。
 
 ### 內容產製類
-| Skill | 用途 | 被誰 call |
-|---|---|---|
-| `content-writer` | 產 caption + hashtags（依平台風格）| `/generate-calendar` |
-| `image-generator` | 產配圖 / 選 Drive 素材 | `/generate-calendar` |
-| `seo-metadata` | 產 YT title / description / tags | `/upload-youtube` |
+| Skill | 用途 |
+|---|---|
+| `content-writer` | 產 caption + hashtags（依平台風格）|
+| `image-generator` | 產配圖 / 選素材 |
+| `seo-metadata` | 產 YT title / description / tags |
 
 ### 資料存取類
-| Skill | 用途 | 實作 |
-|---|---|---|
-| `gdrive-reader` | **名字沿用、已本地化** — 讀 `data/calendar.json` + `media/assets/` | 本地檔 I/O |
-| `gdrive-writer` | **名字沿用、已本地化** — 寫 `data/calendar.json` + `reports/*.md` | 本地檔 I/O（jq 或 Edit tool）|
+| Skill | 用途 |
+|---|---|
+| `local-reader` | 列素材檔、檢查路徑 |
+| `local-writer` | 寫週報 markdown、append stats |
 
 ### 熱點分析類（5 個，對應 5 平台）
-| Skill | 用途 | 被誰 call |
-|---|---|---|
-| `fetch-trends-facebook` | 抓 FB 熱門主題 | `/analyze-hotspots`（並行）|
-| `fetch-trends-instagram` | IG 熱門 | 同上 |
-| `fetch-trends-x` | X 熱門 | 同上 |
-| `fetch-trends-youtube` | YT 熱門 | 同上 |
-| `fetch-trends-tiktok` | TT 熱門 | 同上 |
+| Skill | 用途 |
+|---|---|
+| `fetch-trends-{facebook,instagram,x,youtube,tiktok}` | 抓對應平台熱門主題 |
 
 ### 數據收集類（5 個）
-| Skill | 用途 | 被誰 call |
-|---|---|---|
-| `collect-stats-facebook` | 收 FB 過去 7 天每篇 reach / engagement / best-time | `/weekly-report` |
-| `collect-stats-instagram` | IG 同上 | 同上 |
-| `collect-stats-x` | X 同上 | 同上 |
-| `collect-stats-youtube` | YT 同上 | 同上 |
-| `collect-stats-tiktok` | TT 同上 | 同上 |
+| Skill | 用途 |
+|---|---|
+| `collect-stats-{facebook,instagram,x,youtube,tiktok}` | 收過去 7 天每篇 reach / engagement / best-time |
 
 ### 報告類
-| Skill | 用途 | 被誰 call |
+| Skill | 用途 |
+|---|---|
+| `report-writer` | 產週報 markdown 字串 |
+
+---
+
+## 9. 專案內 config 檔
+
+| 檔案 | 用途 | Git |
 |---|---|---|
-| `report-writer` | 產週報 markdown 字串（caller 存本地 `reports/`）| `/weekly-report` |
+| `config/brand.yaml` | 品牌資訊、5 平台 handle / URL、`storage` 區塊 | commit |
+| `config/products.yaml` | 產品線、給 content-writer 抽主題 | commit |
+| `config/secrets.yaml` | 預留 placeholder | **gitignore** |
 
 ---
 
-## 11. 專案內 config 檔
-
-| 檔案 | 用途 | Git | 重要性 |
-|---|---|---|---|
-| `config/brand.yaml` | 品牌資訊、5 平台 handle / URL、`storage` 區塊定義本地路徑 | commit | ★★★ |
-| `config/products.yaml` | 產品線（MD-905 等）、給 content-writer 抽主題 | commit | ★★ |
-| `config/schedule.yaml` | 每週發文時段 slots + cron 窗口設定 | commit | ★★★ |
-| `config/secrets.yaml` | **本地化後基本無用**（保留給未來 OpenAI key）| **gitignore** | ★ |
-
----
-
-## 12. 整個 dataflow（本地版）
+## 10. Dataflow
 
 ```
-週日 03:00            /generate-calendar (手動或未來 cron)
-                      ├─ 讀 config/schedule.yaml slots
-                      ├─ 讀 config/brand.yaml + products.yaml
-                      ├─ call content-writer 產 caption
-                      ├─ call image-generator 選/產素材 → media/assets/
-                      └─ call gdrive-writer.append_calendar_rows
-                          → 寫進 data/calendar.json
-                                  ↓
-data/calendar.json（本地排程資料源）
-  rows[] 每筆 = 一篇貼文：date / time / platform / caption / hashtags
-                         / image_path / video_path / status
-                                  ↓
-每小時                   scheduled task (publish-due) → /publish-now
-                         ├─ Step 0: gdrive-reader.filter_due_rows
-                         │            讀 data/calendar.json、篩 due 列
-                         │  → 0 列就 return
-                         ├─ Step 2: 依 platform 分發
-                         │  └─ publish-<platform> skill 發文
-                         │     （直接傳 local_image_path/local_video_path）
-                         ├─ Step 3: gdrive-writer.update_calendar_row
-                         │            status=published、post_url=...
-                         ├─ Step 4: 失敗 status=failed + notes
-                         └─ Step 5: browser_close
-                                  ↓
-                         社群平台（FB / IG / X / YT / TT）出貼文
-                                  ↓
-週日夜                  /weekly-report (手動)
-                         ├─ call collect-stats-* ×5（並行）
-                         ├─ call gdrive-reader 讀 data/calendar.json 對帳
-                         ├─ call report-writer 產 markdown 字串
-                         └─ call gdrive-writer.write_report_markdown
-                             → reports/<YYYY-WWW>.md
-                         另外 append stats 到 data/stats-history.json
+你（TG）→ 訊息 / 上傳圖
+   ↓
+~/.claude/channels/telegram/inbox/ ← 圖自動下載
+   ↓
+Channel session 收到、Claude 解讀意圖
+   ↓
+直接呼叫 publish-<platform> skill（不走 calendar、不走 cron）
+   ↓
+Playwright 操作瀏覽器發文
+   ↓
+回報 post URL 給 TG
+```
+
+週末產報告的支線：
+
+```
+你（TG）→ /weekly-report
+   ↓
+併發呼叫 collect-stats-* × 5
+   ↓
+report-writer 產 markdown 字串
+   ↓
+local-writer 寫入 reports/<YYYY-WWW>.md
+   ↓
+append stats 到 data/stats-history.json
 ```
 
 **完全本地 — 無任何外部 API 依賴（除了 5 個社群平台本身）。**

@@ -6,15 +6,14 @@
 
 ## 這個專案是什麼
 
-一套自動化社群小編，用 Playwright 開真瀏覽器替你發文到 5 平台（FB / IG / X / YouTube / TikTok），內容日曆和素材全部存本地、不碰 Google Drive。
+社群小編 agent，用 Playwright 開真瀏覽器發文到 5 平台（FB / IG / X / YouTube / TikTok）。透過 Telegram 對 Claude 下指令、或 Claude Code 對話直接打 slash command。
 
-## 三種使用模式
+## 兩種使用模式
 
 | 模式 | 時機 | 誰觸發 |
 |---|---|---|
-| **手動模式** | 第一次設定、測試、突發狀況 | 你在 Claude Code 對話裡打 slash command |
-| **Telegram 模式（Claude Channels）** | 出門用手機操作、想對話式 debug | 你在 TG 群組打指令給 bot，bot 把訊息推進你的 Claude session |
-| **自動模式（routine）** | 日常營運、無人值守 | Claude Code scheduled task 按 cron 自動跑 |
+| **Telegram 模式**（主要）| 日常使用、想對話式 debug | TG 群組打指令給 bot |
+| **直接模式** | 在電腦前 / 第一次設定 | Claude Code 對話打 slash command |
 
 ---
 
@@ -170,14 +169,14 @@ claude --channels plugin:telegram@claude-plugins-official
 
 | 你在 TG 打 | Claude 會做的事 |
 |---|---|
-| `/generate-calendar` | 產下週日曆寫進 `data/calendar.json` |
-| `/publish-now` | 掃 calendar 找「在時間窗內、status=scheduled」的 row、發到對應平台 |
+| **\[上傳圖\] +** `發 IG，caption: ...` | 圖自動下載、Claude 用 publish-instagram |
+| **\[上傳影片\] +** `發 YT short，title: ...` | 影片下載、Claude 用 publish-youtube |
+| `/publish-now <platform>，caption: ...` | 直接呼叫對應 publish-* skill |
 | `/weekly-report` | 產週報 markdown 到 `reports/<YYYY-WWW>.md` |
 | `/analyze-hotspots` | 5 平台熱點分析 |
-| `幫我發 row 14 到 FB` | Claude 自動解讀、執行 publish-facebook |
-| **\[上傳圖\] +** `發 IG，caption: ...` | 圖自動下載到 `~/.claude/channels/telegram/inbox/`、Claude 用 publish-instagram |
-| `FB 為什麼失敗？` | Claude 看 calendar.json 的 notes 解釋 |
-| `把 row 14 改成 status=cancelled` | Claude 編輯 calendar.json |
+| `幫我發到 FB+IG` | Claude 用同個 caption / image 多平台同發 |
+| `FB 剛剛為什麼失敗？` | Claude 看上文記憶解釋 |
+| `再試一次` | Claude 重新跑剛剛的發文 |
 
 **對話會累積 context**：你問「FB 為什麼失敗」後接著說「再試一次」，Claude 知道指哪一篇。
 
@@ -196,35 +195,20 @@ claude --channels plugin:telegram@claude-plugins-official
 
 ---
 
-## Telegram Channel 設定（模式 B）
-
-用 [Claude Channels](https://code.claude.com/docs/en/channels)（Anthropic 官方）把 Telegram 接進你**已開的 Claude Code session**，可以在 TG 群組對 Claude 對話下指令。
-
-### 為什麼用 Channels 而不是自製 bot
-
-| | Claude Channels（這份用法） | 自製 spawn bot |
-|---|---|---|
-| 開新 chat | 重啟 Claude session | 每次自動 |
-| 對話式 debug（同 chat 追問）| ✅ Claude 記得前文 | ❌ 每次無記憶 |
-| Claude Code 要不要先開 | **必須**（且 `--channels` 啟動）| 不用 |
-| 官方支援 | ✅ Anthropic 維護 | ❌ 自己維護 |
-
-我們選 **Channels**：對話式 debug 比批次發文更需要 context 累積。
+## Telegram Channel 設定
 
 ### 前置條件
 
 - Claude Code v2.1.80+（`claude --version` 確認）
-- 用 **claude.ai 帳號**登入（不支援 console / API key）
-- 安裝 [Bun](https://bun.sh)：`brew install oven-sh/bun/bun`（plugin 是 Bun 寫的）
+- 用 claude.ai 帳號登入（不支援 console / API key）
+- 安裝 [Bun](https://bun.sh)：`brew install oven-sh/bun/bun`
 - Team / Enterprise 帳號要 admin 在 settings 開 `channelsEnabled: true`（個人帳號不用）
 
 ### 設定步驟
 
 #### 1. 申請 Telegram bot token
 
-1. Telegram 找 **@BotFather**、`/newbot`
-2. 取顯示名稱、英文 username（要以 `bot` 結尾）
-3. 拿到 token（`7891234567:AAExxx...` 格式）
+Telegram 找 **@BotFather**、`/newbot`、取名（username 要以 `bot` 結尾）、拿 token（`7891234567:AAExxx...` 格式）。
 
 #### 2. 安裝官方 telegram plugin
 
@@ -244,150 +228,65 @@ claude --channels plugin:telegram@claude-plugins-official
 /telegram:configure 7891234567:AAExxx...
 ```
 
-token 會存到 `~/.claude/channels/telegram/.env`（自動 gitignore，不在你專案 repo）。
+token 存到 `~/.claude/channels/telegram/.env`。
 
 #### 4. 退出後加 `--channels` 重啟
-
-關掉現在的 Claude Code session，在 noirsboxes-agent 目錄重開：
 
 ```bash
 cd /Users/ron/Desktop/SocialMediaAgent/noirsboxes-agent
 claude --channels plugin:telegram@claude-plugins-official
 ```
 
-這個 session 會接住 bot 的訊息。
+#### 5. 配對 TG 帳號（首次）
 
-#### 5. 配對你的 TG 帳號（首次）
-
-- 打開 TG，找你剛建的 bot，傳任何訊息（例：`hi`）
-- bot 回一組配對碼（`pairing code: ABCD1234`）
-- 切回 Claude Code 終端機打：
-
-```
-/telegram:access pair ABCD1234
-```
-
-- 鎖定只允許你發訊息：
-
-```
-/telegram:access policy allowlist
-```
-
-### 日常使用
-
-Claude Code 開著（with `--channels`）的時候：
-
-```
-你（TG）→ /publish-now
-Claude → [操作 Playwright 發 5 平台]
-Claude → 發完了：FB ✅、IG ✅、X ✅、YT ❌（channel verification needed）
-你（TG）→ YT 為什麼失敗？
-Claude → 因為 Ron拾 channel 還沒驗證，需要去 youtube.com/account 完成驗證
-你（TG）→ 那其他四個的 post URL?
-Claude → FB: ... IG: ... X: ... TikTok: ...
-你（TG）→ 把 YT 那行改成 status=cancelled
-Claude → [編輯 data/calendar.json] 改完了
-```
-
-整段在同個 TG 群組、同個 Claude session、累積 context。
-
-### 開新 chat（清乾淨 context）
-
-當對話太長想重置：
-
-- **方法 A**：終端機 Ctrl+C 結束 → `claude --channels plugin:telegram@claude-plugins-official` 重起
-- **方法 B**：在 Claude session 內打 `/clear`（保留 session、清對話歷史）
-
-### 注意
-
-- **Claude Code 關了 bot 就停**（沒人接訊息）— 不適合無人值守、用 routine 補
-- token 等於 bot 密碼，洩漏出去任何人都能控制
-- 一個 bot 只能綁一個 Claude session（多個 session 會搶 polling）
-- 想完全無人值守的場景 → 用模式 C（cron routine）
+- TG 找你 bot、傳任何訊息（例：`hi`）
+- bot 回配對碼（`pairing code: ABCD1234`）
+- 在 Claude Code 終端機打：
+  ```
+  /telegram:access pair ABCD1234
+  /telegram:access policy allowlist
+  ```
 
 ---
 
-## 7 個 slash commands（快查表）
+## 5 個 slash commands
 
 | Command | 做什麼 | 什麼時候用 |
 |---|---|---|
 | `/first-time-login` | 人工登入 5 平台 | 首次 setup / cookie 過期 |
-| `/generate-calendar` | 產下週排程到 `data/calendar.json` | 週日手動 or routine |
-| `/publish-now` | 掃 calendar 發到期的 row | 每小時 routine |
+| `/publish-now` | 直接發指定貼文到指定平台 | 主要發文指令 |
 | `/test-post` | 5 平台各發一則 `test` | 驗收、偵測平台風控 |
-| `/upload-youtube` | 手動上傳長片 | 單次大檔上傳 |
-| `/weekly-report` | 產週報 markdown | 週日晚 |
-| `/analyze-hotspots` | 熱點分析 | 想找題材靈感時 |
-
----
-
-## 常見操作情境
-
-### 想新增一則貼文（不走 content-writer）
-直接編輯 `data/calendar.json`，append 到 `rows[]`：
-```json
-{
-  "row_id": 20,
-  "date": "2026-04-25",
-  "time": "10:00",
-  "platform": "facebook",
-  "topic": "custom",
-  "caption": "你想說的話",
-  "hashtags": ["#xxx"],
-  "image_path": "media/assets/your-image.jpg",
-  "video_path": null,
-  "status": "scheduled",
-  "notes": "手動加"
-}
-```
-記得把對應素材放進 `media/assets/`。
-
-### 想取消一則已排的貼文
-編輯 `data/calendar.json`、把該 row 的 `status` 從 `scheduled` 改成 `cancelled`。
-
-### 想重發一則失敗的
-編輯 `data/calendar.json`、把該 row 的 `status` 從 `failed` 改回 `scheduled`、調整 `time` 到未來。
-
-### 想停掉 routine（出遠門時）
-Claude Code UI → Scheduled Tasks → 找到 publish-due → disable。
-
-### 想暫時讓 FB 不發（平台政策敏感）
-編輯 `data/calendar.json`、把所有 `platform: "facebook"` 的 row `status` 改成 `cancelled`（或刪掉）。
+| `/weekly-report` | 產週報 markdown | 週末做總結時 |
+| `/analyze-hotspots` | 5 平台熱點分析 | 想找題材靈感時 |
 
 ---
 
 ## 換客戶 / 重用
 
-這個 repo 是**配置驅動**的，換品牌只改設定檔、不改程式：
+這個 repo 是配置驅動的，換品牌只改設定檔：
 
 | 要改什麼 | 改哪 |
 |---|---|
 | 品牌名、Tagline、禁用詞 | `config/brand.yaml` + `CLAUDE.md` |
-| 社群帳號 (handle / url) | `config/brand.yaml` 的 `socials` 區塊 |
+| 社群帳號（handle / url）| `config/brand.yaml` 的 `socials` |
 | 產品線 | `config/products.yaml` |
-| 發文時段 | `config/schedule.yaml` |
-| 平台 UI 改版（FB/IG 改版） | 對應 `.claude/skills/publish-*/SKILL.md` |
-| 資料源從本地改 Notion/Airtable | 只改 `gdrive-reader` + `gdrive-writer` 兩個 skill |
+| 平台 UI 改版（FB / IG 改版）| 對應 `.claude/skills/publish-*/SKILL.md` |
 
 ---
 
 ## 故障排除速查
 
-| 症狀 | 可能原因 | 解法 |
-|---|---|---|
-| 首次跑很久才開 Chromium | 正在下載 Playwright + Chromium | 正常，等 1-3 分鐘 |
-| `command not found: npx` | 沒裝 Node.js | `brew install node` 或下載 nodejs.org |
-| Playwright 啟動失敗 "browser not found" | Chromium 沒下載完整 | 跑 `npx playwright install chromium` |
-| `npx @playwright/mcp` 下載失敗 | 網路 / 防火牆 | 換網、或檢查 npm registry 設定 |
-| `/first-time-login` 找不到 `mcp__playwright__*` 工具 | `.claude/settings.json` 的 MCP 區塊沒被 Claude Code 自動 spawn | 用 `claude mcp add` 手動註冊（見 Step 4b）|
-| routine 一直跳權限提示 | `~/.claude/settings.json` 沒 reload | Cmd+Q 重啟 Claude Code |
-| 發文後貼文不見（FB/IG） | 平台靜默 block 自動化 | 間歇性、下次可能過 |
-| routine 跑完所有列 status 都 scheduled | 窗口條件對不上 | 看 `config/schedule.yaml` 的 `publish_window_minutes` 與 cron tick 時機 |
-| 跑 `/publish-now` 說 `image not found` | 素材不在 `media/assets/` | 檢查 `data/calendar.json` 的 `image_path` 有無對應實體檔 |
-| Playwright 開新 Chromium 卡住 | profile lock（你開著舊視窗）| 關掉手動開的 Chromium 視窗再跑 |
-| Scheduled task 每次 run 都要重登 | 用了 `isolation: worktree` | task 設定不要用 worktree |
+| 症狀 | 解法 |
+|---|---|
+| 首次跑很久才開 Chromium | 正常，等 1-3 分鐘下載 |
+| `command not found: npx` | `brew install node` |
+| Playwright "browser not found" | `npx playwright install chromium` |
+| `/first-time-login` 找不到 `mcp__playwright__*` | `claude mcp add playwright -s user -- npx -y @playwright/mcp@latest --user-data-dir <絕對路徑>/browser_profiles` |
+| 一直跳權限提示 | `~/.claude/settings.json` 加 `bypassPermissions`，Cmd+Q 重啟 |
+| 發文後貼文不見（FB / IG）| 平台靜默 block 自動化、間歇性，下次可能過 |
+| Playwright 開新 Chromium 卡住 | profile lock — 關掉手動開的 Chromium 視窗 |
 
-完整故障排除見 `docs/SYSTEM_CHANGES.md` §6。
+完整踩過的坑見 `docs/SYSTEM_CHANGES.md` §6。
 
 ---
 

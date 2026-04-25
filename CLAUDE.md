@@ -13,13 +13,12 @@
 1. **讀 command 後再開工**：使用者下 slash command 後，先讀對應 `.claude/commands/*.md`
 2. **Skill 即單一能力**：command 內出現「需要做 X」→ 找 `.claude/skills/X/SKILL.md` 並依其步驟
 3. **所有平台操作走 Playwright MCP**：不要改用 API、不要 fallback
-4. **所有資料（日曆 / 素材 / 週報）一律本地**：
-   - 內容日曆 → `data/calendar.json`
-   - 圖 / 影片素材 → `media/assets/`
+4. **所有資料一律本地**：
+   - 圖 / 影片素材 → `media/assets/` 或 `~/.claude/channels/telegram/inbox/`（TG 上傳）
    - 週報 markdown → `reports/<YYYY-WWW>.md`
-   - 每週 stats 歷史 → `data/stats-history.json`
+   - 每週 stats 歷史 → `data/stats-history.json`（用到時建）
 5. **Skill 之間零相依**：要組合行為時由 command 編排，不要在 skill 內部呼叫另一個 skill
-6. **失敗時不偽造資料**：更新 `data/calendar.json` 的 status / notes，告知使用者
+6. **失敗時不偽造資料**：清楚回報失敗原因給使用者，不要假裝成功
 
 ## 資產位置
 - 官網：https://www.noirsboxes.com/
@@ -30,7 +29,9 @@
 
 ## 不要做的事
 - 不要在沒看 SKILL.md 前就開始操作瀏覽器
-- **不要碰 Google Drive / Sheet / Doc** — 專案已完全本地化（2026-04-21 重構）
 - 不要在程式碼裡寫死帳密 — 一律 reuse Playwright persistent profile
-- 不要產生 `logs/*.md` run-level log（權威紀錄只有 `data/calendar.json`）
+- 不要產生 `logs/*.md` run-level log
 - 不要做 `browser_take_screenshot` 存檔（但 `browser_snapshot` 讀頁面結構該用就用）
+
+## 全域行為規則
+做任何事之前先讀 [`.claude/AGENT_RULES.md`](.claude/AGENT_RULES.md)（共通禁忌與工作守則）。
