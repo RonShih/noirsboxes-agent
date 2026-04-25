@@ -100,66 +100,29 @@ noirsboxes-agent/
 
 ## 觸發方式
 
-兩種，可並用：
+**主要走 Telegram（手動觸發）。** 之前用 cron scheduled task 定期掃 calendar，2026-04-26 起改全手動。
 
-### A. Telegram（用 Claude Channels — 推薦給對話式互動）
+### Telegram + Claude Channels（主要操作介面）
 
-用 [Claude Channels](https://code.claude.com/docs/en/channels)（Anthropic 官方）把 Telegram 接進你**已開的 Claude Code session**，可以在 TG 群組對 Claude 對話下指令、看訊息、追問為什麼失敗。
+用 [Claude Channels](https://code.claude.com/docs/en/channels)（Anthropic 官方）把 Telegram 接進你**已開的 Claude Code session**：
 
-**特色**：
-- 同個 chat 累積 context，可以追問「FB 為什麼失敗」「再試一次」等 follow-up
-- 必須 Claude Code v2.1.80+ + claude.ai 登入（非 API key）
-- 必須一直開著 Claude session（電腦關了 bot 就停）
+- 在 TG 群組對 Claude 對話下指令（`/publish-now`、`/weekly-report` 等）
+- 同個 chat 累積 context，可以追問「FB 為什麼失敗」、「再試一次」、「換 caption」
+- TG 上傳的圖會自動下載到 `~/.claude/channels/telegram/inbox/`，Claude 直接拿來發文
 
-**設定**：見 [`docs/HOW_TO_USE.md`](./docs/HOW_TO_USE.md) 的「Telegram Channel 設定」章節。
+**設定流程**：見 [`docs/HOW_TO_USE.md`](./docs/HOW_TO_USE.md) 的「Telegram Channel 設定」章節。
 
-### B. Scheduled task（cron 自動化）
-完全無人值守，到點自動跑。適合「凌晨 3 點產下週日曆」這種無人時段。
+### 限制
 
----
+- Claude Code v2.1.80+ + claude.ai 登入（非 API key）
+- **必須一直開著 `claude --channels ...`** 終端機 — 關了 bot 就停（沒人接 TG 訊息）
+- Playwright MCP 必須裝在 user-level（`claude mcp add playwright -s user ...`），否則 channel session 看不到
 
-## Routine 自動化部署（交付給廠商時）
+### 為什麼不用 scheduled task
 
-Routine 在 fresh session 跑，需要：
-
-### 1. `~/.claude/settings.json`（使用者層，不是專案層）
-
-```json
-{
-  "extraKnownMarketplaces": {
-    "claude-plugins-official": { "source": { "source": "github", "repo": "anthropics/claude-plugins-official" } }
-  },
-  "skipAutoPermissionPrompt": true,
-  "skipDangerousModePermissionPrompt": true,
-  "permissions": {
-    "defaultMode": "bypassPermissions",
-    "allow": [
-      "Bash(curl *)", "Bash(cd *)", "Bash(ls *)", "Bash(mkdir *)", "Bash(rm *)",
-      "Read", "Write", "Edit", "Glob", "Grep",
-      "mcp__playwright__*",
-      "mcp__scheduled-tasks__*"
-    ]
-  }
-}
-```
-
-寫完**重啟 Claude Code** 才生效。
-
-### 2. Scheduled tasks
-
-三個建議 routine（在 Claude Desktop UI 建）：
-
-| routine | 觸發 | prompt 摘要 |
-|---|---|---|
-| `publish-due` | 每小時 `0 * * * *` | 執行 `/publish-now`；讀 `data/calendar.json` 找 due 列 |
-| `generate-weekly` | 週日 03:00 `0 3 * * 0` | 執行 `/generate-calendar` 產下週列 |
-| （選）`weekly-review` | 週日 22:00 | 執行 `/weekly-report` |
-
-詳細 prompt 模板見 `docs/SYSTEM_CHANGES.md`。
-
-### 3. 第一次 Run now
-
-每個 routine 建好後，**按一次 Run now** 批准 tool permissions（存到 task）。
+- 排程觸發跑出來常**靜默失敗**（FB 自動化偵測、cookies 過期、權限提示卡 timeout 等），人不在的時候沒人處理
+- 改手動觸發 = 你下指令時眼睛會看到結果，失敗時當場追問 Claude 為什麼
+- 真正想自動化的部分（例如「週日凌晨 3 點產下週日曆」），未來再補回 scheduled task
 
 ---
 

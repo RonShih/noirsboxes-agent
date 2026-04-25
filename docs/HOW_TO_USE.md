@@ -153,86 +153,50 @@ media/assets/
 
 ## 日常 workflow
 
-### 模式 A — 全手動（你每天上 Claude Code 操作）
+**主流程：Telegram bot 觸發**（2026-04-26 起）。之前用 cron scheduled task 定期掃 calendar，現已**全部停用**。原因：scheduled task 跑出問題人不在無法處理（FB 自動化偵測、cookies 過期、權限提示卡 timeout 等）；改手動觸發 = 你下指令時看得到結果，當場追問 Claude 為什麼。
 
-#### 週日：產下週排程
+### 啟動 bot session（每次開機後一次）
+
+開終端機：
+
+```bash
+cd /Users/ron/Desktop/SocialMediaAgent/noirsboxes-agent
+claude --channels plugin:telegram@claude-plugins-official
 ```
-/generate-calendar
-```
-這會讀 `config/schedule.yaml` 的 slots、呼叫 content-writer 產 caption、image-generator 選素材、寫進 `data/calendar.json`。
 
-**建議跑完人工審一次**（打開 `data/calendar.json` 看看文案、改不滿意的）。
+讓這個終端機**一直開著**，bot 才會回應 TG 訊息。Cmd+Q / Ctrl+C 關掉就斷線。
 
-#### 每小時（或隨時）：發文
-```
-/publish-now
-```
-這會掃 `data/calendar.json`、找「現在到 10 分內」該發的 row、依 platform 發出去。沒要發的就一句「no due rows, exit」結束。
+### TG 上的常用指令
 
-#### 週日晚：產週報
-```
-/weekly-report
-```
-產 `reports/2026-W17.md`，有 5 平台互動數據、Top 5 貼文、3 條優化建議、best_times vs schedule.yaml 對照表。
+| 你在 TG 打 | Claude 會做的事 |
+|---|---|
+| `/generate-calendar` | 產下週日曆寫進 `data/calendar.json` |
+| `/publish-now` | 掃 calendar 找「在時間窗內、status=scheduled」的 row、發到對應平台 |
+| `/weekly-report` | 產週報 markdown 到 `reports/<YYYY-WWW>.md` |
+| `/analyze-hotspots` | 5 平台熱點分析 |
+| `幫我發 row 14 到 FB` | Claude 自動解讀、執行 publish-facebook |
+| **\[上傳圖\] +** `發 IG，caption: ...` | 圖自動下載到 `~/.claude/channels/telegram/inbox/`、Claude 用 publish-instagram |
+| `FB 為什麼失敗？` | Claude 看 calendar.json 的 notes 解釋 |
+| `把 row 14 改成 status=cancelled` | Claude 編輯 calendar.json |
 
-**想改排程時段**：你自己改 `config/schedule.yaml` 的 slots（週報不會自動改）。
+**對話會累積 context**：你問「FB 為什麼失敗」後接著說「再試一次」，Claude 知道指哪一篇。
 
-### 模式 B — 自動模式（routine cron）
+### 想開新對話（清乾淨 context）
 
-要讓它自動跑，建 scheduled tasks：
+當對話太長想重置：
 
-#### 建 `publish-due`
-- Claude Code UI → Scheduled Tasks → Create
-- **taskId**: `publish-due`
-- **Cron**: `0 * * * *`（每小時）
-- **Prompt**: 見下方模板
-- 建好後按一次 **Run now** 預先批准所有工具權限
+- **方法 A**：終端機 Ctrl+C → 重啟 `claude --channels ...`
+- **方法 B**：在 Claude session 內打 `/clear`（保留 session、清歷史）
 
-#### 建 `generate-weekly`
-- **taskId**: `generate-weekly`
-- **Cron**: `0 3 * * 0`（週日 03:00）
-- **Prompt**: 類似 publish-due 的格式，但執行 `/generate-calendar`
+### 替代：直接在 Claude Code 對話下指令
 
-#### 建 `weekly-review`（選配）
-- **Cron**: `0 22 * * 0`（週日 22:00）
-- **Prompt**: 執行 `/weekly-report`
+不在 TG 旁邊時，電腦上 cd 進專案、`claude` 進去後一樣的 slash command 也會跑。
 
-### Scheduled task prompt 模板
+### 想未來補回 scheduled task 自動跑？
 
-```
-你現在要在 noirsboxes-agent 專案中執行 routine 發文流程。
+如果之後想要「凌晨 3 點自動產週曆」這種無人值守任務，去 Claude Desktop UI 的 Scheduled Tasks 建即可。**目前所有 scheduled task 都已刪除**，不會自動觸發任何事。
 
-**工作目錄要求：**
-必須在 /Users/<你的名字>/Desktop/SocialMediaAgent/noirsboxes-agent 直接跑，不要在 worktree 裡
-
-**任務：**
-執行 /publish-now
-
-**行為鐵則：**
-- 每一列（row）獨立、照 /publish-now 步驟跑、不跳 platform、不換順序
-- 不要因為歷史 notes 說過「FB 會被 block」就跳過不發
-
-**省 token：**
-1. gdrive-reader 先讀 data/calendar.json 找 due 列
-2. due = 0 → 一句話「no due rows, exit」收工
-3. due ≥ 1 → 進 step 2 發文
-
-**登入：**
-- 不要執行 /first-time-login（scheduled task 不能處理互動登入）
-- 直接試發、卡登入頁就讓 skill 回 failed + 原因
-
-**瀏覽器：**
-- 有 due 列才開、/publish-now 結尾會 browser_close
-
-**嚴禁：**
-- ❌ 不要寫 logs/*.md
-- ❌ 不要 browser_take_screenshot 存檔
-- ❌ 不要碰 Google Drive / Apps Script / Doc
-- ✅ 權威紀錄只有 data/calendar.json
-
-**回報：**
-逐列回報 published / failed + 原因。
-```
+⚠️ 已知坑見 [`docs/WARNINGS.md`](./WARNINGS.md)。
 
 ---
 
