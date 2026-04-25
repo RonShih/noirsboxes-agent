@@ -1,33 +1,6 @@
 # 系統層級改動紀錄（noirsboxes-agent 部署注意事項）
 
-這份文件列出**不在專案 git repo 裡**、但對 routine 自動化**必要**的系統層級設定。交付廠商或換電腦時要照這份重建。
-
----
-
-## 🔄 2026-04-21 大改：完全本地化
-
-**專案不再依賴 Google Drive / Sheet / Doc / Apps Script**。所有資料改本地儲存：
-
-| 舊（雲端）| 新（本地）|
-|---|---|
-| Google Sheet `content-calendar-2026` | `data/calendar.json` |
-| Google Drive `media_folder_id` 圖片 | `media/assets/` |
-| Google Doc 週報 | `reports/<YYYY-WWW>.md` |
-| Apps Script endpoint（寫 Sheet）| 直接 read/write `data/calendar.json` |
-| Drive MCP 下載檔 | 素材必須已在 `media/assets/` |
-
-**好處**：
-- 不用維護 Apps Script 部署（之前常壞）
-- 不用 OAuth 反覆授權 Drive
-- 速度快（本地 I/O vs 網路 API）
-- 交付給廠商簡單（不用設 Google 帳號 / Apps Script）
-
-**壞處**：
-- 素材要手動管（從 Drive 下載到 `media/assets/` 後 commit 或分發）
-- 多人協作要自己同步 `data/calendar.json`（用 git 或共用儲存）
-- 換機器要把 `data/` + `media/assets/` 手動搬
-
-**若要切回雲端版**：以前的 gdrive 設定保留在 `config/brand.yaml` 底下註解區。
+這份文件列出**不在專案 git repo 裡**、但對部署**必要**的系統層級設定。交付廠商或換電腦時照這份重建。
 
 ---
 
@@ -212,15 +185,13 @@ TG 上傳的素材會自動下載到 `~/.claude/channels/telegram/inbox/`，Clau
 
 路徑 `.claude/commands/*.md` — 手動在 Claude Code 對話或 TG bot 對話打 `/xxx`。
 
-| Command | 用途 | 觸發方式 |
-|---|---|---|
-| `/publish-now` | 讀 Sheet 找 due 列 → 依 platform 發到對應平台 → 更新 Sheet | scheduled task（`test-5min` / 未來 `publish-due`）|
-| `/generate-calendar` | 依 `schedule.yaml` 產下週排程 → 寫進 Sheet | scheduled task `calendar-test`（手動）|
-| `/first-time-login` | Playwright 打開 5 平台等人類登入 → 存 cookies 到 `browser_profiles/` | **只能人類互動**、不能 schedule |
-| `/test-post` | 5 平台測試發文（驗收用） | 手動 |
-| `/upload-youtube` | 長片手動上傳 YouTube（驗收 #7） | 手動 |
-| `/weekly-report` | 產週報 Google Doc（不寫回 schedule.yaml）| 手動 |
-| `/analyze-hotspots` | 並行跑 5 個 fetch-trends-* 算熱點 → 排序 | 手動 |
+| Command | 用途 |
+|---|---|
+| `/first-time-login` | Playwright 打開 5 平台等人類登入 → 存 cookies 到 `browser_profiles/` |
+| `/publish-now` | 依當下 TG 對話意圖直接呼叫 publish-* skill 發文 |
+| `/test-post` | 5 平台 smoke test |
+| `/weekly-report` | 併發 collect-stats-* → 產 markdown 週報到 `reports/` |
+| `/analyze-hotspots` | 併發 fetch-trends-* → 算熱點排序 |
 
 ---
 

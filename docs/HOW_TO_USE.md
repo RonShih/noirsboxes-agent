@@ -64,7 +64,7 @@ claude --version # Claude Code 已安裝
 cd ~/Desktop
 git clone https://github.com/RonShih/noirsboxes-agent
 cd noirsboxes-agent
-ls config/       # 應該看到 brand / products / schedule.yaml
+ls config/       # 應該看到 brand / products.yaml
 ```
 
 **不用跑 `npm install`** — 專案沒有 `package.json`，所有 Playwright 相關套件靠 `npx` 按需下載。
@@ -146,7 +146,7 @@ media/assets/
 └── ...
 ```
 
-檔名對應 `data/calendar.json` 裡 row 的 `image_path` / `video_path`。
+在 TG 對 bot 發文時可直接指定路徑、或上傳新圖（會自動下載到 `~/.claude/channels/telegram/inbox/`）。
 
 ---
 
