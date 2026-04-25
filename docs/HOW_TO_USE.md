@@ -203,6 +203,17 @@ claude --channels plugin:telegram@claude-plugins-official
 - 用 claude.ai 帳號登入（不支援 console / API key）
 - 安裝 [Bun](https://bun.sh)：`brew install oven-sh/bun/bun`
 - Team / Enterprise 帳號要 admin 在 settings 開 `channelsEnabled: true`（個人帳號不用）
+- **Playwright MCP 必須裝在 user-level**（channel session 不會讀專案 `.claude/settings.json`）：
+  ```bash
+  claude mcp add playwright -s user -- \
+    npx -y @playwright/mcp@latest \
+    --user-data-dir /Users/<你>/Desktop/SocialMediaAgent/noirsboxes-agent/browser_profiles
+  ```
+  跑完用 `claude mcp list` 確認看得到 playwright。
+
+### ⚠️ 在哪打 `/plugin` 指令
+
+**只能在 standalone CLI**（終端機跑 `claude` 進入的對話）裡用。**不能在 Claude Desktop 的 Cowork / Chat 嵌入模式裡用** — 會回 `/plugin isn't available in this environment`。
 
 ### 設定步驟
 
