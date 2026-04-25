@@ -153,7 +153,7 @@ media/assets/
 
 ## 日常 workflow
 
-**主流程：Telegram bot 觸發**（2026-04-26 起）。之前用 cron scheduled task 定期掃 calendar，現已**全部停用**。原因：scheduled task 跑出問題人不在無法處理（FB 自動化偵測、cookies 過期、權限提示卡 timeout 等）；改手動觸發 = 你下指令時看得到結果，當場追問 Claude 為什麼。
+主流程：**Telegram bot 觸發**。
 
 ### 啟動 bot session（每次開機後一次）
 
@@ -191,10 +191,6 @@ claude --channels plugin:telegram@claude-plugins-official
 ### 替代：直接在 Claude Code 對話下指令
 
 不在 TG 旁邊時，電腦上 cd 進專案、`claude` 進去後一樣的 slash command 也會跑。
-
-### 想未來補回 scheduled task 自動跑？
-
-如果之後想要「凌晨 3 點自動產週曆」這種無人值守任務，去 Claude Desktop UI 的 Scheduled Tasks 建即可。**目前所有 scheduled task 都已刪除**，不會自動觸發任何事。
 
 ⚠️ 已知坑見 [`docs/WARNINGS.md`](./WARNINGS.md)。
 

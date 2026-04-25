@@ -100,29 +100,19 @@ noirsboxes-agent/
 
 ## 觸發方式
 
-**主要走 Telegram（手動觸發）。** 之前用 cron scheduled task 定期掃 calendar，2026-04-26 起改全手動。
-
-### Telegram + Claude Channels（主要操作介面）
-
-用 [Claude Channels](https://code.claude.com/docs/en/channels)（Anthropic 官方）把 Telegram 接進你**已開的 Claude Code session**：
+主要走 **Telegram + [Claude Channels](https://code.claude.com/docs/en/channels)**（Anthropic 官方）：
 
 - 在 TG 群組對 Claude 對話下指令（`/publish-now`、`/weekly-report` 等）
-- 同個 chat 累積 context，可以追問「FB 為什麼失敗」、「再試一次」、「換 caption」
+- 同個 chat 累積 context，可以追問「FB 為什麼失敗」、「再試一次」
 - TG 上傳的圖會自動下載到 `~/.claude/channels/telegram/inbox/`，Claude 直接拿來發文
 
-**設定流程**：見 [`docs/HOW_TO_USE.md`](./docs/HOW_TO_USE.md) 的「Telegram Channel 設定」章節。
+設定流程：見 [`docs/HOW_TO_USE.md`](./docs/HOW_TO_USE.md) 的「Telegram Channel 設定」章節。
 
-### 限制
+### 環境需求
 
 - Claude Code v2.1.80+ + claude.ai 登入（非 API key）
-- **必須一直開著 `claude --channels ...`** 終端機 — 關了 bot 就停（沒人接 TG 訊息）
-- Playwright MCP 必須裝在 user-level（`claude mcp add playwright -s user ...`），否則 channel session 看不到
-
-### 為什麼不用 scheduled task
-
-- 排程觸發跑出來常**靜默失敗**（FB 自動化偵測、cookies 過期、權限提示卡 timeout 等），人不在的時候沒人處理
-- 改手動觸發 = 你下指令時眼睛會看到結果，失敗時當場追問 Claude 為什麼
-- 真正想自動化的部分（例如「週日凌晨 3 點產下週日曆」），未來再補回 scheduled task
+- 必須一直開著 `claude --channels ...` 終端機
+- Playwright MCP 必須裝在 user-level（`claude mcp add playwright -s user ...`）
 
 ---
 
